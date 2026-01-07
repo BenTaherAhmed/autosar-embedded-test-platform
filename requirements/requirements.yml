@@ -1,0 +1,5 @@
+requirements:
+  - id: REQ_SPI_001
+    title: SPI initialization shall configure bus parameters
+    asil: B
+    type: functional

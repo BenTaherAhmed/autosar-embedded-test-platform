@@ -1,0 +1,41 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  windows-build-test:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Python deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install pyyaml
+
+      - name: Configure (CMake)
+        run: cmake -S . -B build
+
+      - name: Build (Debug)
+        run: cmake --build build --config Debug
+
+      - name: Run unit tests (CTest)
+        run: ctest --test-dir build -C Debug --output-on-failure
+
+      - name: Traceability check
+        run: python tools/traceability/trace_check.py
+
+      - name: Upload traceability report
+        uses: actions/upload-artifact@v4
+        with:
+          name: traceability-report
+          path: reports/traceability_report.md

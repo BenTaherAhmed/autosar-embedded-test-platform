@@ -31,6 +31,12 @@ jobs:
       - name: Run unit tests (CTest)
         run: ctest --test-dir build -C Debug --output-on-failure
 
+      - name: Build (Release)
+        run: cmake --build build --config Release
+
+      - name: Run unit tests (CTest - Release)
+        run: ctest --test-dir build -C Release --output-on-failure
+
       - name: Traceability check
         run: python tools/traceability/trace_check.py
 

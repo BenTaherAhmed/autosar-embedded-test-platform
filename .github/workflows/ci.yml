@@ -23,9 +23,14 @@ jobs:
           pip install pyyaml
 
       - name: Install cppcheck
-        run: choco install cppcheck -y
+        run: |
+          choco install cppcheck -y
+          refreshenv
 
       - name: Static analysis (cppcheck)
+        run: cppcheck --version
+
+      - name: Run cppcheck
         run: powershell -ExecutionPolicy Bypass -File tools/lint/run_cppcheck.ps1
 
       - name: Configure (CMake)

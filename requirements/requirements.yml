@@ -3,3 +3,23 @@ requirements:
     title: SPI initialization shall configure bus parameters
     asil: B
     type: functional
+
+  - id: REQ_CAN_001
+    title: CAN init shall set driver state to initialized
+    description: CAN driver shall reject operations until initialized.
+
+  - id: REQ_CAN_002
+    title: CAN send shall enqueue a frame in TX queue
+    description: When initialized, Can_Send shall enqueue a frame and return OK.
+
+  - id: REQ_CAN_003
+    title: CAN receive shall dequeue a frame from RX queue
+    description: When RX queue is not empty, Can_Receive shall return the next frame.
+
+  - id: REQ_CAN_004
+    title: CAN shall report queue overflow
+    description: If TX or RX queue is full, API shall return an overflow error.
+
+  - id: REQ_CAN_005
+    title: CAN shall validate parameters
+    description: APIs shall return invalid parameter error for null pointers or invalid DLC.

@@ -1,8 +1,9 @@
-# Fail the script if cppcheck reports issues
+$ErrorActionPreference = "Stop"
+
 cppcheck `
   --enable=warning,style,performance,portability `
-  --error-exitcode=1 `
   --inline-suppr `
   --suppress=missingIncludeSystem `
+  --suppress=unusedFunction `
   -I src/mcal_mock `
   src

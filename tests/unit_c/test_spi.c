@@ -1,4 +1,6 @@
-// REQ: REQ_SPI_001
+/* REQ: REQ_SPI_001 */
+/* REQ: REQ_SPI_002 */
+
 #include <stdio.h>
 #include <string.h>
 #include "../../src/mcal_mock/spi.h"

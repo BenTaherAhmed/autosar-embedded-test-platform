@@ -1,3 +1,10 @@
+/* REQ: REQ_CAN_001 */
+/* REQ: REQ_CAN_002 */
+/* REQ: REQ_CAN_003 */
+/* REQ: REQ_CAN_004 */
+/* REQ: REQ_CAN_005 */
+
+
 #include <stdio.h>
 #include <string.h>
 #include "../../src/mcal_mock/can.h"

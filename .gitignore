@@ -1,5 +1,5 @@
 build/
+reports/coverage/
+__pycache__/
 *.o
 *.exe
-__pycache__/
-reports/*.md

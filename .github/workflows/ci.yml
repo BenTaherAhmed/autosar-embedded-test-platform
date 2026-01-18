@@ -9,45 +9,63 @@ jobs:
     runs-on: windows-latest
 
     steps:
-      - name: Checkout
+      # -----------------------------
+      # Checkout
+      # -----------------------------
+      - name: Checkout repository
         uses: actions/checkout@v4
 
+      # -----------------------------
+      # Python (for traceability)
+      # -----------------------------
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
 
-      - name: Install Python deps
+      - name: Install Python dependencies
         run: |
           python -m pip install --upgrade pip
           pip install pyyaml
 
+      # -----------------------------
+      # Static analysis (cppcheck)
+      # -----------------------------
       - name: Install cppcheck
         run: |
           choco install cppcheck -y
           refreshenv
 
-      - name: Static analysis (cppcheck)
-        run: cppcheck --version
-
       - name: Run cppcheck
         run: powershell -ExecutionPolicy Bypass -File tools/lint/run_cppcheck.ps1
 
+      # -----------------------------
+      # CMake Configure
+      # -----------------------------
       - name: Configure (CMake)
         run: cmake -S . -B build
 
+      # -----------------------------
+      # Build + Test (Debug)
+      # -----------------------------
       - name: Build (Debug)
         run: cmake --build build --config Debug
 
-      - name: Run unit tests (CTest)
+      - name: Run unit tests (CTest - Debug)
         run: ctest --test-dir build -C Debug --output-on-failure
 
+      # -----------------------------
+      # Build + Test (Release)
+      # -----------------------------
       - name: Build (Release)
         run: cmake --build build --config Release
 
       - name: Run unit tests (CTest - Release)
         run: ctest --test-dir build -C Release --output-on-failure
 
+      # -----------------------------
+      # Traceability
+      # -----------------------------
       - name: Traceability check
         run: python tools/traceability/trace_check.py
 
@@ -56,3 +74,29 @@ jobs:
         with:
           name: traceability-report
           path: reports/traceability_report.md
+
+      # -----------------------------
+      # Code Coverage (OpenCppCoverage)
+      # -----------------------------
+      - name: Install OpenCppCoverage
+        run: choco install opencppcoverage -y
+
+      - name: Generate coverage report (Debug)
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path reports\coverage | Out-Null
+
+          OpenCppCoverage `
+            --sources "$PWD\src" `
+            --modules "$PWD\build\Debug\test_spi.exe" `
+            --modules "$PWD\build\Debug\test_can.exe" `
+            --excluded_modules ".*System32.*" `
+            --export_type "html:$PWD\reports\coverage" `
+            --working_dir "$PWD\build" `
+            -- ctest -C Debug --output-on-failure
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-html
+          path: reports/coverage

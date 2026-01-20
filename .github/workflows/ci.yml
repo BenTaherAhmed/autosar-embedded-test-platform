@@ -45,24 +45,25 @@ jobs:
       - name: Install OpenCppCoverage
         run: |
           choco install opencppcoverage -y
-          refreshenv
+          
 
-      - name: Check OpenCppCoverage
-        run: OpenCppCoverage --version
+      - name: Locate OpenCppCoverage
+        shell: powershell
+        run: |
+          $exe = "C:\Program Files\OpenCppCoverage\OpenCppCoverage.exe"
+          if (!(Test-Path $exe)) { throw "OpenCppCoverage.exe not found at $exe" }
+          "$exe" --version
 
       - name: Generate coverage (Debug)
+        shell: powershell
         run: |
-          OpenCppCoverage ^
-            --sources "${{ github.workspace }}\src" ^
-            --export_type "html:${{ github.workspace }}\reports\coverage" ^
-            --working_dir "${{ github.workspace }}\build" ^
+          $exe = "C:\Program Files\OpenCppCoverage\OpenCppCoverage.exe"
+          & "$exe" `
+            --sources "${{ github.workspace }}\src" `
+            --export_type "html:${{ github.workspace }}\reports\coverage" `
+            --working_dir "${{ github.workspace }}\build" `
             -- ctest --test-dir "${{ github.workspace }}\build" -C Debug --output-on-failure
 
-      - name: Upload coverage report (HTML)
-        uses: actions/upload-artifact@v4
-        with:
-          name: coverage-html
-          path: reports/coverage
 
       # ---------- Build / Test Release ----------
       - name: Build (Release)

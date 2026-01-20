@@ -18,62 +18,82 @@ jobs:
           python-version: "3.11"
 
       - name: Install Python deps
+        shell: powershell
         run: |
           python -m pip install --upgrade pip
           pip install pyyaml
 
-      # ---------- Static analysis ----------
       - name: Install cppcheck
+        shell: powershell
         run: |
           choco install cppcheck -y
-          refreshenv
+
+      - name: Static analysis (cppcheck)
+        shell: powershell
+        run: cppcheck --version
 
       - name: Run cppcheck
+        shell: powershell
         run: powershell -ExecutionPolicy Bypass -File tools/lint/run_cppcheck.ps1
 
-      # ---------- Configure / Build Debug ----------
       - name: Configure (CMake)
+        shell: powershell
         run: cmake -S . -B build
 
       - name: Build (Debug)
+        shell: powershell
         run: cmake --build build --config Debug
 
       - name: Run unit tests (CTest - Debug)
+        shell: powershell
         run: ctest --test-dir build -C Debug --output-on-failure
 
-      # ---------- Coverage (Debug) ----------
+      # -------------------- COVERAGE (Debug) --------------------
       - name: Install OpenCppCoverage
+        shell: powershell
         run: |
           choco install opencppcoverage -y
-          
 
       - name: Locate OpenCppCoverage
         shell: powershell
         run: |
           $exe = "C:\Program Files\OpenCppCoverage\OpenCppCoverage.exe"
           if (!(Test-Path $exe)) { throw "OpenCppCoverage.exe not found at $exe" }
-          "$exe" --version
+          & $exe --version
 
       - name: Generate coverage (Debug)
         shell: powershell
         run: |
           $exe = "C:\Program Files\OpenCppCoverage\OpenCppCoverage.exe"
-          & "$exe" `
-            --sources "${{ github.workspace }}\src" `
-            --export_type "html:${{ github.workspace }}\reports\coverage" `
-            --working_dir "${{ github.workspace }}\build" `
-            -- ctest --test-dir "${{ github.workspace }}\build" -C Debug --output-on-failure
+          $src = "${{ github.workspace }}\src"
+          $out = "${{ github.workspace }}\reports\coverage"
+          $bld = "${{ github.workspace }}\build"
 
+          New-Item -ItemType Directory -Force -Path $out | Out-Null
 
-      # ---------- Build / Test Release ----------
+          & $exe `
+            --sources $src `
+            --export_type "html:$out" `
+            --working_dir $bld `
+            -- ctest --test-dir $bld -C Debug --output-on-failure
+
+      - name: Upload coverage report (HTML)
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-html
+          path: reports/coverage
+      # ----------------------------------------------------------
+
       - name: Build (Release)
+        shell: powershell
         run: cmake --build build --config Release
 
       - name: Run unit tests (CTest - Release)
+        shell: powershell
         run: ctest --test-dir build -C Release --output-on-failure
 
-      # ---------- Traceability ----------
       - name: Traceability check
+        shell: powershell
         run: python tools/traceability/trace_check.py
 
       - name: Upload traceability report

@@ -4,3 +4,4 @@ __pycache__/
 *.o
 *.exe
 lastCoverageResults.log
+ts.txt

@@ -22,14 +22,16 @@ jobs:
           python -m pip install --upgrade pip
           pip install pyyaml
 
+      # ---------- Static analysis ----------
       - name: Install cppcheck
         run: |
           choco install cppcheck -y
+          refreshenv
 
       - name: Run cppcheck
-        shell: powershell
         run: powershell -ExecutionPolicy Bypass -File tools/lint/run_cppcheck.ps1
 
+      # ---------- Configure / Build Debug ----------
       - name: Configure (CMake)
         run: cmake -S . -B build
 
@@ -39,6 +41,37 @@ jobs:
       - name: Run unit tests (CTest - Debug)
         run: ctest --test-dir build -C Debug --output-on-failure
 
+      # ---------- Coverage (Debug) ----------
+      - name: Install OpenCppCoverage
+        run: |
+          choco install opencppcoverage -y
+          refreshenv
+
+      - name: Check OpenCppCoverage
+        run: OpenCppCoverage --version
+
+      - name: Generate coverage (Debug)
+        run: |
+          OpenCppCoverage ^
+            --sources "${{ github.workspace }}\src" ^
+            --export_type "html:${{ github.workspace }}\reports\coverage" ^
+            --working_dir "${{ github.workspace }}\build" ^
+            -- ctest --test-dir "${{ github.workspace }}\build" -C Debug --output-on-failure
+
+      - name: Upload coverage report (HTML)
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-html
+          path: reports/coverage
+
+      # ---------- Build / Test Release ----------
+      - name: Build (Release)
+        run: cmake --build build --config Release
+
+      - name: Run unit tests (CTest - Release)
+        run: ctest --test-dir build -C Release --output-on-failure
+
+      # ---------- Traceability ----------
       - name: Traceability check
         run: python tools/traceability/trace_check.py
 
@@ -47,33 +80,3 @@ jobs:
         with:
           name: traceability-report
           path: reports/traceability_report.md
-
-      # -------------------------
-      # Coverage (OpenCppCoverage)
-      # -------------------------
-      - name: Install OpenCppCoverage
-        run: |
-          choco install opencppcoverage -y
-
-      - name: Generate coverage (Debug)
-        shell: powershell
-        run: |
-          $ws = $env:GITHUB_WORKSPACE
-          OpenCppCoverage `
-            --sources "$ws\src" `
-            --export_type "html:$ws\reports\coverage" `
-            --working_dir "$ws\build" `
-            --cover_children `
-            -- ctest --test-dir "$ws\build" -C Debug --output-on-failure
-
-      - name: Upload coverage report (HTML)
-        uses: actions/upload-artifact@v4
-        with:
-          name: coverage-html
-          path: reports/coverage
-
-      - name: Build (Release)
-        run: cmake --build build --config Release
-
-      - name: Run unit tests (CTest - Release)
-        run: ctest --test-dir build -C Release --output-on-failure

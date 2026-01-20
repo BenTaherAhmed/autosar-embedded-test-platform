@@ -3,3 +3,11 @@ reports/coverage/
 __pycache__/
 *.o
 *.exe
+# Traceability report (generated)
+reports/traceability_report.md
+
+# OpenCppCoverage log (generated)
+lastCoverageResults.log
+
+# If you generate coverage via tools folder (optional)
+tools/coverage/
